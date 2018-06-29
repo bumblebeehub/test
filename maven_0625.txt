@@ -1,0 +1,110 @@
+项目管理工具：自动化构建工具和依赖管理工具
+Maven Ant gradle
+Maven： bin目录包含mvn的运行脚本
+boot包含类加载器的框架，maven使用其来加载自己的类库
+conf放一些配置文件
+lib放所有的类库
+maven中的目录结构
+	src
+		-main
+			java
+		-test	
+			java
+
+		resources
+Maven常用的构建命令：
+	mvn -v 用来查看mvn版本
+		compile 编译 
+		test 测试
+		package 打包
+		clean 删除target
+		install 安装jar包到本地仓库
+
+maven引入一个包，有三种方式：
+	java自带的包
+	在该项目的src下把想要引入的类的源文件拷贝一份
+	使用jar包，在pom文件中配置
+
+构建一个包的流程：首先是编译，在这个过程中如果用到了其他的jar包，mvn就会通过去pom配置文件中查找是否引入了该依赖包的坐标，如果有，就去本地仓库里寻找这个jar包，找到后，将jar包所在路径加入到该项目的classpath中，如果没有找到，就去maven的中心仓库里去查找并download到本地仓库供项目使用。当包构建compile完成后，使用mvn install指令将其添加到本地仓库。
+
+maven自动构建目录骨架
+	archetype插件：用于创建符合Maven规定的目录骨架
+	常用的构建命令
+		1.第一种例如项目maven03，使用mvn archetype：generate命令，依次输入groupId等信息
+		2.还有一种命令一次性输入所有信息：mvn archetype:generate -DgroupId=com.imooc.maven04 -DartifactId=maven04-demo（一般是项目名-模块名） -Dversion=1.0.0SNAPSHOT -Dpackage=com.imooc.maven04.demo（代码存在的包）
+	自动创建目录骨架
+
+maven中的坐标和仓库
+	所有构件都有坐标作为唯一标识
+	仓库
+		分为本地仓库和远程仓库
+	镜像仓库
+	更改仓库位置 在settings.xml中修改localrepository路径即可，修改后要重新在这个地方install自己的项目
+
+在eclipse中安装maven插件以及创建maven项目
+	当运行mvn compile或者mvn package是会报错‘不再支持源选项1.5’，在pom.xml文件properties标签中，加入<maven.compiler.source>1.8</maven.compiler.source>
+	<maven.compiler.target>1.8</maven.compiler.target>即可
+
+maven的生命周期和插件
+	一个完整的项目构建过程包括：清理、编译、测试、打包、集成测试、验证、部署；
+	maven抽象出一套完整的生命周期，而插件则是maven抽象的一个具体的实现
+	maven定义了三套抽象的生命周期：
+		clean 清理项目（又分为三个部分）
+		（maven中的每个生命周期都是独立的，但是后阶段的生命周期依赖于前面的生命周期，如执行package命令，maven会依次执行compile和test命令，再执行package命令。）
+			pre-clean 执行清理前的工作
+			clean 清理上一次构建生成的所有文件
+			post-clean 执行清理后的文件
+		default 构建项目（最核心的阶段）
+			compile、test、package、install都属于这个阶段
+		site 生成项目站点
+		（站点就是web站点，其实就是一些html文件即网页，用于展示给用户关于这个项目的信息，包括API文档等；开发者可以从这个网站上得到设计文档，代码报告以及发布计划等）
+			pre-site 在生成项目站点前要完成的工作
+			site 生成项目的站点文档
+			post-site 在生成项目站点后要完成的工作
+			site-deploy 发布生成的站点到服务器上
+
+maven中的Pom.xml解析
+	pom.xml常用元素介绍
+		groupId一般是反写的公司网址+项目名
+		artifactId项目名+模块名
+		version 版本：snapsho快照
+			      alpha内部测试
+			      beta公测
+			      release稳定
+			      GA正式发布
+		packaging 默认打包成jar包，也有war，zip，pom等格式
+		name 项目描述名
+		url 项目地址
+		description 项目描述
+		dependencies 依赖项 指出坐标
+			dependency
+				groupId
+				artifactId等
+				scope 依赖范围
+				optional 设置依赖是否可选
+				exclusions 排除依赖传递列表
+					exclusion
+		dependencyManagement 依赖管理
+			dependencies
+		build 
+			plugins 插件列表，依旧要指出坐标
+		parent 用于在子模块中对父模块的pom继承
+		modules 定义多个模块一起编译
+
+maven依赖范围
+	项目在使用框架的时候，需要将框架的jar包引入到项目的classpath中，maven提供了三种classpath：编译、测试、运行，scope就是用来确定jar包用于什么阶段，有6种选择
+
+maven依赖传递
+	A依赖于B， B依赖于C，A传递依赖于C（C的jar包会被自动引入到A中），如果A不想依赖于B，可以使用exclusions排除依赖，放入C的坐标即可
+	
+	
+		
+
+			
+			
+	
+		
+	
+
+		
+

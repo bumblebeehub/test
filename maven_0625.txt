@@ -1,3 +1,11 @@
+//一些git的命令
+首先在目录下放入想push的文件
+git status检查一下文件
+git add xx文件
+git commit -m 'description'
+git push即可
+//
+
 项目管理工具：自动化构建工具和依赖管理工具
 Maven Ant gradle
 Maven： bin目录包含mvn的运行脚本
@@ -96,6 +104,22 @@ maven依赖范围
 
 maven依赖传递
 	A依赖于B， B依赖于C，A传递依赖于C（C的jar包会被自动引入到A中），如果A不想依赖于B，可以使用exclusions排除依赖，放入C的坐标即可
+
+maven依赖冲突
+	短路优先 优先解析路径短的依赖
+	先声明优先 在路径相同长度的情况下，哪个先声明则依赖哪个
+
+maven聚合和继承
+	聚合，将多个项目聚集在一起进行操作，比如install等；
+		使用<modules>模块
+			<module>xxx</module>
+			<module>xxx</module>
+	            </modules>
+	继承 多个项目依赖同一个jar包，可以在一个父类项目中对这个jar包进行dependencyManagement，然后在项目里引如父类项目的坐标（使用parent标签）
+
+使用maven构建web项目
+	解决右键项目没有project facet问题：更新web、xml、java ee and OSGI Enterprise
+	解决后首先要在pom文件中添加容器即服务器的标签；然后手动创建src/main/java以及src/test/java目录并更新项目；期间要注意eclipse中的编译器要和电脑上安装的jdk是一个版本，否则会出现红叉；然后检查build path，没有错误之后就可以将项目打包并发布到web容器中，就可以在网页上访问该项目了（其实是index.jsp页面）在pom文件中配置jetty或者tomcat（容器）插件，输入jetty:run后即可启动服务器并在localhost:8080访问。当想在打包的时候就使用服务器运行服务，可以使用executions标签，设置phase(package)和goal(run)
 	
 	
 		

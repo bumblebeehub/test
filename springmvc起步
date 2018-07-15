@@ -1,0 +1,37 @@
+Spring MVC
+前端控制器
+	Front Controller类似于医院的分诊台，告诉病人应该去往哪个科室，也称作Dispatcher分发器，而各个科室就是Controller，它们了解所有的业务逻辑。
+	Controller了解所有的业务细节，负责业务数据的抽取
+	View template了解所有的前端特性，负责页面的呈现
+	Front Controller负责分发调度
+	mvc的核心思想就是业务数据与业务呈现相分离
+
+MVC概念
+	Model-View-Controller
+	View视图层 为用户提供UI，重点关注数据的呈现
+	Model模型层 业务数据的信息表示，关注支撑业务的信息构成，通常是多个业务实体的组合
+	Controller控制层 调用业务逻辑产生合适的数据（Model），传递数据给视图层用于呈现
+	MVC是一种架构模式：程序分工，分工合作，既相互独立，又协同工作
+
+Spring MVC的静态概念
+	DispatcherServlet-Front Controller，利用它来将用户的请求进行分发给不同的Controller，以产生不同的Model，再通过DispatcherServlet转发给View
+	Controller-产生model
+	HandlerAdapter-handler其实就是ds指向controller的一个中间过渡期
+	HandlerInterceptor-包装Handler
+	HandlerMapping-指向哪一个controller
+	HandlerExecutionChain-执行链
+	ModelAndView
+	ViewResolve-指定哪一个View来呈现页面
+	View
+
+
+SpringMVC动态概念
+	一张图即可以解释
+
+从配置文件开始
+	大概讲解了一下dispatcher-servlet的配置，包括使用依赖注入的方式帮助控制器调用其他服务
+
+Controller基础代码
+	
+	
+	

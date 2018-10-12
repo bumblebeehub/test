@@ -26,7 +26,8 @@
 
 linux软件源配置与学习建议
 	阿里云源配置官网：http://mirrors.aliyun.com
-	MYsql基础：http://www.imooc.com/learn/122
+	
+基础：http://www.imooc.com/learn/122
 
 linux软件源配置实操
 	在阿里云源配置官网找到ubuntu：替换/etc/apt/sources.list中的http://  archive.ubuntu.com/ 为 mirrors.aliyun.com
@@ -47,6 +48,7 @@ vsftpd文件服务器安装与配置讲解
 		useradd：ftpuser
 		修改权限
 		设置密码：passwd ftpuser 为123456
+		配置访问文件夹的权限 sudo chmod 777 /ftp/ftpuser
 		把新增加的用户放入用户配置文件中
 		修改vsftpd配置文件
 			没有修改，但是视频里修改了pasv模式（被动模式）
@@ -332,9 +334,191 @@ idea的注入和自动编译配置
 
 后台商品新增、保存、更新、上下架功能开发
 	问题：新增产品和更新产品的地方，为什么用getId来判断是更新还是新增，如果id不为空就是新增的话，那么这个新增的产品不就没有id了吗？
+	答案：数据表结构在设计的时候把主码（id）设为自增的状态，要是新增数据没有id也能插入成功
 	上下架的功能其实就是更新产品的状态
 
+
+!!!要充分了解spring MVC的原理 还有去查一下spring boot
 后台获取商品详情功能开发及ProperitiesUtil配置工具，DateTimeUtil时间处理工具开发
+	赶紧去把vo bo pojo等等内容看懂了
+	静态代码块执行顺序先于普通代码块，普通代码块执行顺序先于构造代码块
+
+后台商品列表动态分页功能开发
+	比较复杂，用到了mybatis的pagehelper来对商品列表进行自动分页，且在返回productList的时候，里面装的不是完整的product，而是修改后的productListVo，专门用来添加到列表进行返回的，跟productDetailVo一样的用法；pageHelper的包括了startPage、自己填充的sql语句也即跟mapper打交道的部分、pageHelper的收尾语句（PageInfo xx = new PageInfo（list））；
+
+后台商品搜索功能开发
+	后台搜索时也需要分页功能，所以pageNum，pageSize均是参数
+	在搜索时，有两个参数，productName和productId，sql语句中，要求和productName的关系是 name like #{productName}而不是name = #{productName},且id = #{productId}，这就要考虑到当二者其一为空时怎么sql怎么选择，如果使用if标签
+	<if test="productName != null">
+        and name LIKE #{productName}
+      </if>
+
+      <if test="productId != null">
+        and id = #{productId}
+      </if>
+	会在productName不会空时出现where 后面紧跟and name like xxx的情况，因此，把if语句放入where标签，它会自动删除遇到的第一个and/or
+	<where>
+      <if test="productName != null">
+        and name LIKE #{productName}
+      </if>
+
+      <if test="productId != null">
+        and id = #{productId}
+      </if>
+
+    </where>
+
+后台商品图片的springMVC上传与富文本上传ftp服务器功能开发1
+	servlet的上下文怎么理解？
+	path又是什么path？
+	upload逻辑里面生成的fileDir是在服务器上生成还是本地？  tomcat服务器上的文件夹，实际上就是本机
+	ftp服务器在linux系统下就是文件夹，所以上传文件的业务逻辑里有一个参数是remotePath
+	ftpClient开启被动模式什么意思？
+
+后台商品图片的springMVC上传与富文本上传ftp服务器功能开发2
+	写完后在index.jsp文件中新建表单进行测试，注意的是表单标签里要有enctype=multipart/form-data
+	simditor，副文本编辑器
+	富文本到底用来干嘛的？它的上传跟普通上传有什么区别？前端的插件对后端的返回都是有要求的，修改response的header从哪里知道的？（只针对simditor富文本插件）
+	测试的时候，上传成功并返回图片地址，直接在ftp服务器上发现看不见文件，检查发现图片已上传到tomcat服务器，但是并没有上传到ftp服务器。后发现是vsftpd的配置问题，重新按照网上的配置，记得开启被动模式！然后能够上传，但是仍然存在问题：upload下始终只有一个文件。
+至此，后台商品的上传已经结束
+
+
+前台商品详情，列表，搜索，动态功能排序
+	当参数不是必须要传的时候，使用RequestParam注解，给它们设定一个defaultValue
+	pageHelper，pageInfo怎么用，好好看看productmapper中怎么得到List
+	前台搜索出来的商品，当商品状态为2的时候，不会将该商品添加到商品列表里，而后台的商品列表是所有的都添加
+
+商品管理模块所有功能自测
+	前台和后台的测试都是一样的，直接访问接口
+
+
+购物车模块开发概要与接口设计讲解
+	功能介绍：加入产品，更新产品书，查询商品数，移除商品，单选取消等
+	学习目标：
+		购物车模块的设计思想
+		如何封装一个高复用购物车核心方法
+		解决浮点型商业运算中丢失精度的问题
+
+加入购物车功能开发1
+	购物车中最后一个limitQuantity，用于限制商品个数，比如说总库存只有10个，就不能往购物车中加入11个
+	根据用户id来获取购物车时，返回一个List？一个用户不应该只有一个购物车吗？
+
+加入购物车功能开发2
+	精度丢失的问题：使用string的BigDecimal来解决BigDecimal b1 = new BigDecimal("0.05")等，比如在计算商品总价的时候，明明0.05+0.01是0.06,但是直接相加会出现精度的错误结果为0.060000000000000005，这样用户明明有6分钱，却没有办法购买！！所以在商业计算价格中，一定要用BigDecimal的string构造器！！！！
+
+更新、删除购物车商品功能开发
+	CartVo和CartProductVo的用处分别是什么？
+	数据库里set多个值的时候一定要用逗号分割
+		set checked = #{checked},
+    		update_time = now()
+    		where user_id = #{userId}
+
+全选、全反选、单个商品选中、单个反选，查询购物车总数
+	在sql中统计购物车总的商品数量时，如果使用
+		    SELECT sum(quantity) as count from mmall_cart WHERE user_id = #{userId}，这样当userId不存在时，返回结果为null，不符合CartMapper中的返回值int类型，因此有两种改法：1.将cartMapper中的返回值改为Integer
+	2.修改sql语句为SELECT IFNULL(sum(quantity),0) as count from mmall_cart WHERE user_id = #{userId}
+
+
+购物车模块所有功能自测
+	已完成
+
+收货地址管理模块开发概要及接口设计讲解
+	添加地址、删除地址、更新地址、地址列表、分页、详情等
+	学习目标：SpringMVC数据绑定中对象绑定
+		mybatis自动生成主键、配置和使用
+		如何避免横向越权漏洞的巩固
+	
+收货地址增，删，改，查，分页列表，地址详情功能开发
+	在更新地址的时候，当传递参数为Shipping类型时，在数据库中parameterType就为这个类<update id="updateByShipping" parameterType="com.mmall.pojo.Shipping">，更新的时候，userId不能修改，只能作为一个判断条件。（因为userId本来就不能修改）
+
+收货地址管理模块所有功能自测
+	在测试list.do的时候，为什么PageInfo pageInfo = new PageInfo(shippingList)可以得到正确结果，而PageInfo pageInfo = new PageInfo();pageInfo.setList(shippingList);结果不对？
+
+支付模块开发概要与接口设计讲解
+	功能介绍：支付宝对接，支付回调，查询支付状态等
+	熟悉支付宝对接核心文档，调通支付宝功能官方demo
+	RSA1和RSA2验证签名及加密
+
+支付宝支付功能对接要点讲解（知识点补充）
+	一些重要文档
+	沙箱调试环境：蚂蚁沙箱环境（Beta）是协助开发者进行接口功能开发及主要功能联调的辅助环境，沙箱环境模拟了开放平台部分产品的主要功能和主要逻辑（参考“沙箱支持产品列表”），为保证沙箱稳定，沙箱环境测试数据会进行定期数据清理，Beta测试阶段每日的21：00到次日的9：00为维护时间，在此时间内沙箱环境部分功能可能会不可用。
+	支付宝扫码支付主业务流程
+	支付宝扫码支付流程（官方文档中都有）
+	支付宝扫码支付重要字段：
+		关键入参：out_trade_no 商户订单号，不能重复
+			total_amount 订单金额
+			subject 订单标题
+			store_id 商户门店编号
+			timeout_express 交易超时时间
+		关键出参 qr_code 订单二维码图片地址
+		还有很多比如交易状态、订单金额、付款金额等
+	支付宝扫码支付重要细节：	
+		主动轮询和回调的区别：主动轮询是设置一定的时间，不断去查询;回调是支付宝自己调用接口，把支付细节通知给我们
+		避免单边账
+		同步请求的加签和验证签名
+		回调验证
+		过滤掉重复的通知
+		一定要验证并确保可接受的异步通知是支付宝发出的
+		回调请求的返回：程序执行完之后必须打印输出success这7个字符，如果商户反馈的不是这7个字符，支付宝服务器会不断重发通知，直到超过24小时22分钟
+	支付宝扫码支付对接技巧
+		回调的调试方法 
+			外网远程debug：保持远端代码版本与本地代码保持一致;及时关闭开放的debug端口
+			内网穿透（natapp）：使用这个软件可以产生一个域名，外网可以访问这个域名，效果与直接访问本机ip地址+端口是一样的。
+
+支付宝支付功能重要文档简介（知识点补充）
+	用到的时候再看看吧
+
+支付宝支付功能官方demo调试实操1（知识点补充）
+	使用文档中所教方法生成商户公钥和私钥，使用openssl方法，下载gz包之后解压，并进入文件夹，命令行输入命令输入sudo openssl，然后按照方法生成公钥和私钥
+
+支付宝支付功能官方demo调试实操2（知识点补充）
+	下载natapp，首先申请隧道，得到authtoken，然后给natapp赋予权限chmod a+x natapp,再./natapp -authtoken=xxx打开得到natapp分配的穿透网址，它就是一个可以全球访问的网址啦。主要用于支付宝的回调
+
+支付宝支付功能开发1
+	集成支付宝的功能
+	maven的配置中有一个compile插件，负责把jar包都一起打包到服务器上
+	
+支付宝支付功能开发2
+	重点是生成二维码并上传到文件服务器上那一步，path怎么用，还有上下文是什么意思？
+	targetFile里是一张二维码还是多张二维码
+
+支付宝回调函数实现与支付宝SDK源码解析
+	什么是支付宝的回调？
+	支付宝的回调都是把参数放在request里面，需要我们自己去提取，提取各个参数后最重要的就是验证，调用SDK里已经有的函数，能够完成验签的功能，但是还需要我们自己完成校验通知数据正确性的功能，也就是文档里的第五步
+	StringBuffer是一个线程安全的
+
+支付模块所有功能自测
+	完成订单模块开发后再进行测试,现存有一个问题就是qr图片已经上传到ftp服务器上,但是如何将ftp协议转换为http协议访问呢
+
+	
+	
+查询订单支付状态功能开发
+	订单状态和交易状态之间的关系？
+	整理一下：支付宝官方文档说，异步通知，是当收银台调用预下单请求API生成二维码展示给用户后，用户通过手机扫描二维码进行支付，支付宝会将该笔订单的变更信息，沿着商户调用预下单请求时所传入的通知地址主动推送给商户。也就是说，回调，是当用户扫描二维码后，支付宝会把接下来的订单的变更信息，返回给用户预先传入的地址，这就是回调，参数就是网址里的https://docs.open.alipay.com/194/103296/
+	
+
+订单模块开发概要及接口设计讲解
+	
+创建订单、清空购物车等功能开发
+	前面说过根据用户Id获取购物车的时候,返回的是一个list,那么应该就是每种商品构成了一个购物车
+	创建订单，包括要从购物车中选取已经被标记为选中的商品，要为购物车中每一个cartItem构造出一个orderItem并添加到orderItemList中，然后计算价格等
+
+创建订单、清空购物车等功能开发2
+	真的麻烦,要为Order创建orderVo, 就要为OrderItem创建OrderItemVo,就要为shipping创建shippingVo
+
+取消订单,获取购物车中商品信息功能开发
+	取消订单,就是更新数据库中该订单的状态
+	获取购物车中商品信息,就由用户id来获取,用户有多个cart,获取每个cart中被勾选的商品数及其总价格等
+
+前后台订单列表,订单详情,发货功能开发
+	
+
+		
+
+	
+	
+	
+	
 	
 	
 		
